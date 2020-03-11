@@ -4,11 +4,12 @@ const router = new Router();
 const Ticket = require("../../models/ticket/model");
 const User = require("../../models/user/model");
 const Event = require("../../models/event/model");
+const Comment = require("../../models/comments/model");
 const auth = require("../../auth/middleware");
 
 router.get("/:id", (req, res, next) => {
   const ticketId = req.params.id;
-  Ticket.findByPk(ticketId, { include: [User, Event] })
+  Ticket.findByPk(ticketId, { include: [User, Event, Comment] })
     .then(ticket => {
       if (ticket) {
         ticket.user.password = "";
@@ -53,6 +54,28 @@ router.post("/:id", auth, (req, res, next) => {
   } else {
     res.status(400).send({
       message: "Please supply a valid ticket information"
+    });
+  }
+});
+
+router.post("/:id/comment", auth, (req, res, next) => {
+  const ticketId = req.params.id;
+  const userId = req.user.id;
+  if (req.body) {
+    if (req.body.text) {
+      Comment.create({ text: req.body.text, ticketId, userId })
+        .then(newComment => {
+          res.json(newComment);
+        })
+        .catch(next);
+    } else {
+      res.status(400).send({
+        message: "Please, provide valid comment information"
+      });
+    }
+  } else {
+    res.status(400).send({
+      message: "Please, provide valid comment information"
     });
   }
 });
