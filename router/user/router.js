@@ -23,7 +23,8 @@ router.post("/login", (req, res, next) => {
           } else if (bcrypt.compareSync(req.body.password, entity.password)) {
             res.send({
               jwt: toJWT({ userId: entity.id }),
-              username: entity.username
+              username: entity.username,
+              id: entity.id
             });
           } else {
             res.status(400).send({
@@ -63,7 +64,13 @@ router.post("/create", (req, res, next) => {
       }).then(foundUser => {
         if (!foundUser) {
           User.create(user)
-            .then(newUser => res.json(newUser))
+            .then(newUser => {
+              res.send({
+                jwt: toJWT({ userId: newUser.id }),
+                username: newUser.username,
+                id: newUser.id
+              });
+            })
             .catch(next);
         } else {
           res.status(400).send({

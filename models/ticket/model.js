@@ -1,20 +1,20 @@
 const Sequelize = require("sequelize");
 const db = require("../../db");
 const User = require("../user/model");
+const Event = require("../event/model");
 
 const Ticket = db.define(
   "ticket",
   {
     image: {
-      type: Sequelize.TEXT,
-      allowNull: false
+      type: Sequelize.TEXT
     },
     price: {
       type: Sequelize.INTEGER,
       allowNull: false
     },
     ticketDescription: {
-      type: Sequelize.DATEONLY,
+      type: Sequelize.TEXT,
       allowNull: false
     }
   },
@@ -23,7 +23,10 @@ const Ticket = db.define(
   }
 );
 
-Ticket.hasOne(User);
+Ticket.belongsTo(User);
 User.hasMany(Ticket);
+
+Ticket.belongsTo(Event);
+Event.hasMany(Ticket);
 
 module.exports = Ticket;
