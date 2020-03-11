@@ -2,6 +2,7 @@ const { Router } = require("express");
 const router = new Router();
 
 const User = require("../../models/user/model");
+const Ticket = require("../../models/ticket/model");
 
 const bcrypt = require("bcrypt");
 const auth = require("../../auth/middleware");
@@ -88,6 +89,22 @@ router.post("/create", (req, res, next) => {
       message: "Please supply a valid username and password"
     });
   }
+});
+
+router.get("/:id", (req, res, next) => {
+  const { id } = req.params;
+  User.findByPk(id, { include: [Ticket] })
+    .then(user => {
+      if (user) {
+        user.password = "";
+        res.json(user);
+      } else {
+        res.status(404).send({
+          message: `Sorry user with id: ${id} not found`
+        });
+      }
+    })
+    .catch(next);
 });
 
 router.get("/", (req, res, next) => {
