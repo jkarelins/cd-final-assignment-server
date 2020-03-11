@@ -9,11 +9,22 @@ const auth = require("../../auth/middleware");
 
 router.get("/:id", (req, res, next) => {
   const ticketId = req.params.id;
-  Ticket.findByPk(ticketId, { include: [User, Event, Comment] })
+  Ticket.findByPk(ticketId, {
+    include: [User, Event, Comment]
+  })
     .then(ticket => {
       if (ticket) {
         ticket.user.password = "";
-        res.json(ticket);
+        Event.findByPk(ticket.event.id, { include: [Ticket] })
+          .then(event => {
+            const result = {
+              ticket,
+              restTickets: event.tickets
+            };
+            // console.log(event.tickets);
+            res.json(result);
+          })
+          .catch(next);
       } else {
         res.status(404).send({
           message: "Sorry this ticket is not found"

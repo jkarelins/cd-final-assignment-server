@@ -7,7 +7,8 @@ const Ticket = db.define(
   "ticket",
   {
     image: {
-      type: Sequelize.TEXT
+      type: Sequelize.TEXT,
+      allowNull: false
     },
     price: {
       type: Sequelize.INTEGER,
@@ -15,6 +16,10 @@ const Ticket = db.define(
     },
     ticketDescription: {
       type: Sequelize.TEXT,
+      allowNull: false
+    },
+    risk: {
+      type: Sequelize.INTEGER,
       allowNull: false
     }
   },

@@ -56,7 +56,8 @@ router.post("/create", (req, res, next) => {
     if (req.body.username && req.body.password) {
       const user = {
         username: req.body.username,
-        password: bcrypt.hashSync(req.body.password, 10)
+        password: bcrypt.hashSync(req.body.password, 10),
+        ticketAmount: 0
       };
       User.findOne({
         where: {

@@ -3,6 +3,7 @@ const router = new Router();
 
 const Event = require("../../models/event/model");
 const User = require("../../models/user/model");
+const Comment = require("../../models/comments/model");
 const Ticket = require("../../models/ticket/model");
 
 const auth = require("../../auth/middleware");
@@ -63,7 +64,7 @@ router.post("/create", auth, (req, res, next) => {
 // Show single event
 router.get("/:id", (req, res, next) => {
   const eventId = req.params.id;
-  Event.findByPk(eventId, { include: [Ticket] })
+  Event.findByPk(eventId, { include: [{ model: Ticket, include: [Comment] }] })
     .then(event => {
       if (event) {
         res.json(event);
@@ -87,12 +88,58 @@ router.post("/:id/ticket", auth, (req, res, next) => {
         req.body.image ||
         "https://static.thenounproject.com/png/340719-200.png";
 
-      Ticket.create({ image, price, ticketDescription, eventId, userId })
-        .then(newTicket => res.json(newTicket))
-        .catch(err => {
-          console.log(err);
-          return next;
-        });
+      User.findByPk(userId, { include: [Ticket] }).then(user => {
+        if (!user) {
+          return res.status(400).send({
+            message: "User Not Found"
+          });
+        }
+        let risk = 0;
+        if (user.ticketAmount === 0) {
+          // CALCULATE RISK - if the ticket is the only ticket of the author, add 10%
+          risk = 10;
+          user.ticketAmount = user.ticketAmount + 1;
+          user.save();
+        } else if (user.ticketAmount === 1) {
+          // IF USER HAD ONE TICKET BEFORE
+          user.ticketAmount = user.ticketAmount + 1;
+          user.save();
+
+          // find previous ticket and update
+          Ticket.findOne({ where: { userId: user.id } })
+            .then(ticket => {
+              ticket.risk = risk;
+              ticket.save();
+            })
+            .catch(next);
+        } else {
+          user.ticketAmount = user.ticketAmount + 1;
+          user.save();
+        }
+
+        // CHECK TIME AND MAKE RISK CORRECTION
+        const currTime = new Date();
+        const hoursNow = currTime.getHours();
+        console.log(currTime.getHours(), "HOURS ARE HERE NOW!");
+        if (hoursNow > 9 && hoursNow < 17) {
+          risk = risk + 10;
+        }
+
+        // CREATE A NEW TICKET
+        Ticket.create({
+          image,
+          price,
+          ticketDescription,
+          eventId,
+          userId,
+          risk
+        })
+          .then(newTicket => res.json(newTicket))
+          .catch(err => {
+            console.log(err);
+            return next;
+          });
+      });
     } else {
       res.status(400).send({
         message: "Please supply a valid ticket information"
