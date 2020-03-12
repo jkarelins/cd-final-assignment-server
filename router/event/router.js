@@ -5,6 +5,7 @@ const Event = require("../../models/event/model");
 const User = require("../../models/user/model");
 const Comment = require("../../models/comments/model");
 const Ticket = require("../../models/ticket/model");
+const { Op } = require("sequelize");
 
 const auth = require("../../auth/middleware");
 
@@ -30,6 +31,31 @@ router.post("/create", auth, (req, res, next) => {
       message: "Please supply a valid event information"
     });
   }
+});
+
+// FIND ALL EVENTS
+router.get("/allevents", (req, res, next) => {
+  const limit = 3;
+  const offset = req.query.offset || 0;
+
+  Event.findAndCountAll({
+    limit,
+    offset,
+    where: {
+      eventDate: { [Op.gt]: new Date() }
+    }
+  })
+    .then(events => {
+      if (events.rows) {
+        const { rows, count } = events;
+        res.json({ data: rows, count: count });
+      } else {
+        res.status(404).send({
+          message: "Sorry no Events found"
+        });
+      }
+    })
+    .catch(next);
 });
 
 // GET ONE EVENT
@@ -101,7 +127,6 @@ router.post("/:id/ticket", auth, (req, res, next) => {
         }
 
         // CREATE A NEW TICKET
-        globalUser.password = "";
         Ticket.create({
           image,
           price,
@@ -133,29 +158,6 @@ router.post("/:id/ticket", auth, (req, res, next) => {
       message: "Please supply a valid ticket information"
     });
   }
-});
-
-// FIND ALL EVENTS
-router.get("/", (req, res, next) => {
-  Event.findAll()
-    .then(events => {
-      if (events) {
-        const filtered = events.filter(event => {
-          const eventDate = new Date(event.eventDate);
-          console.log(eventDate - Date.now(), event.name);
-          if (eventDate - Date.now() > 0) {
-            return event;
-          }
-        });
-
-        res.json(filtered);
-      } else {
-        res.status(404).send({
-          message: "Sorry no Events found"
-        });
-      }
-    })
-    .catch(next);
 });
 
 module.exports = router;
