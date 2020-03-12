@@ -7,6 +7,7 @@ const Event = require("../../models/event/model");
 const Comment = require("../../models/comments/model");
 const auth = require("../../auth/middleware");
 
+// GET ONE TICKET
 router.get("/:id", (req, res, next) => {
   const ticketId = req.params.id;
   Ticket.findByPk(ticketId, {
@@ -34,6 +35,7 @@ router.get("/:id", (req, res, next) => {
     .catch(next);
 });
 
+// UPDATE TICKET
 router.post("/:id", auth, (req, res, next) => {
   const ticketId = req.params.id;
   const userId = req.user.id;
@@ -69,6 +71,7 @@ router.post("/:id", auth, (req, res, next) => {
   }
 });
 
+// ADD NEW COMMENT
 router.post("/:id/comment", auth, (req, res, next) => {
   const ticketId = req.params.id;
   const userId = req.user.id;

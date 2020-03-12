@@ -8,7 +8,7 @@ const Ticket = require("../../models/ticket/model");
 
 const auth = require("../../auth/middleware");
 
-// Create a new event
+// CREATE NEW EVENT
 router.post("/create", auth, (req, res, next) => {
   if (req.body) {
     if (
@@ -32,36 +32,7 @@ router.post("/create", auth, (req, res, next) => {
   }
 });
 
-// Edit event DO NOT USE IT !!!
-// router.put("/:id", auth, (req, res, next) => {
-//   if (req.body && req.params.id) {
-//     if (
-//       req.body.name &&
-//       req.body.description &&
-//       req.body.logo &&
-//       req.body.eventDate
-//     ) {
-//       const eventId = req.params.id;
-//       Event.findByPk(eventId)
-//         .then(async event => {
-//           const updatedEvent = await event.update(req.body);
-//           await updatedEvent.save();
-//           res.json(updatedEvent);
-//         })
-//         .catch(next);
-//     } else {
-//       res.status(400).send({
-//         message: "Please supply a valid event information"
-//       });
-//     }
-//   } else {
-//     res.status(400).send({
-//       message: "Please supply a valid event information"
-//     });
-//   }
-// });
-
-// Show single event
+// GET ONE EVENT
 router.get("/:id", (req, res, next) => {
   const eventId = req.params.id;
   Event.findByPk(eventId, {
@@ -80,12 +51,13 @@ router.get("/:id", (req, res, next) => {
     .catch(next);
 });
 
-// Create NEW ticket
+// CREATE NEW TICKET
 router.post("/:id/ticket", auth, (req, res, next) => {
   const eventId = req.params.id;
   const userId = req.user.id;
   if (req.body) {
     if (req.body.price && req.body.ticketDescription) {
+      let globalUser = {};
       const { price, ticketDescription } = req.body;
       const image =
         req.body.image ||
@@ -98,6 +70,7 @@ router.post("/:id/ticket", auth, (req, res, next) => {
           });
         }
         let risk = 0;
+        globalUser = user;
         if (user.ticketAmount === 0) {
           // CALCULATE RISK - if the ticket is the only ticket of the author, add 10%
           risk = 10;
@@ -123,12 +96,12 @@ router.post("/:id/ticket", auth, (req, res, next) => {
         // CHECK TIME AND MAKE RISK CORRECTION
         const currTime = new Date();
         const hoursNow = currTime.getHours();
-        console.log(currTime.getHours(), "HOURS ARE HERE NOW!");
         if (hoursNow > 9 && hoursNow < 17) {
           risk = risk + 10;
         }
 
         // CREATE A NEW TICKET
+        globalUser.password = "";
         Ticket.create({
           image,
           price,
@@ -137,7 +110,14 @@ router.post("/:id/ticket", auth, (req, res, next) => {
           userId,
           risk
         })
-          .then(newTicket => res.json(newTicket))
+          .then(newTicket => {
+            Ticket.findByPk(newTicket.id, { include: [User] }).then(
+              foundTicket => {
+                foundTicket.user.password = "";
+                res.json(foundTicket);
+              }
+            );
+          })
           .catch(err => {
             console.log(err);
             return next;
@@ -155,6 +135,7 @@ router.post("/:id/ticket", auth, (req, res, next) => {
   }
 });
 
+// FIND ALL EVENTS
 router.get("/", (req, res, next) => {
   Event.findAll()
     .then(events => {
