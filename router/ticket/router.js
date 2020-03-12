@@ -76,7 +76,12 @@ router.post("/:id/comment", auth, (req, res, next) => {
     if (req.body.text) {
       Comment.create({ text: req.body.text, ticketId, userId })
         .then(newComment => {
-          res.json(newComment);
+          Comment.findByPk(newComment.id, { include: [User] })
+            .then(foundComment => {
+              foundComment.user.password = "";
+              res.json(foundComment);
+            })
+            .catch(next);
         })
         .catch(next);
     } else {
