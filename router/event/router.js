@@ -57,7 +57,6 @@ router.post("/:id/ticket", auth, (req, res, next) => {
   const userId = req.user.id;
   if (req.body) {
     if (req.body.price && req.body.ticketDescription) {
-      let globalUser = {};
       const { price, ticketDescription } = req.body;
       const image =
         req.body.image ||
@@ -70,7 +69,6 @@ router.post("/:id/ticket", auth, (req, res, next) => {
           });
         }
         let risk = 0;
-        globalUser = user;
         if (user.ticketAmount === 0) {
           // CALCULATE RISK - if the ticket is the only ticket of the author, add 10%
           risk = 10;
@@ -97,6 +95,8 @@ router.post("/:id/ticket", auth, (req, res, next) => {
         const currTime = new Date();
         const hoursNow = currTime.getHours();
         if (hoursNow > 9 && hoursNow < 17) {
+          risk = risk - 10;
+        } else {
           risk = risk + 10;
         }
 
@@ -140,7 +140,15 @@ router.get("/", (req, res, next) => {
   Event.findAll()
     .then(events => {
       if (events) {
-        res.json(events);
+        const filtered = events.filter(event => {
+          const eventDate = new Date(event.eventDate);
+          console.log(eventDate - Date.now(), event.name);
+          if (eventDate - Date.now() > 0) {
+            return event;
+          }
+        });
+
+        res.json(filtered);
       } else {
         res.status(404).send({
           message: "Sorry no Events found"
