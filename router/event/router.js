@@ -64,9 +64,12 @@ router.post("/create", auth, (req, res, next) => {
 // Show single event
 router.get("/:id", (req, res, next) => {
   const eventId = req.params.id;
-  Event.findByPk(eventId, { include: [{ model: Ticket, include: [Comment] }] })
+  Event.findByPk(eventId, {
+    include: [{ model: Ticket, include: [Comment, User] }]
+  })
     .then(event => {
       if (event) {
+        event.tickets.map(ticket => (ticket.user.password = ""));
         res.json(event);
       } else {
         res.status(404).send({

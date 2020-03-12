@@ -10,18 +10,18 @@ const auth = require("../../auth/middleware");
 router.get("/:id", (req, res, next) => {
   const ticketId = req.params.id;
   Ticket.findByPk(ticketId, {
-    include: [User, Event, Comment]
+    include: [User, Event, { model: Comment, include: [User] }]
   })
     .then(ticket => {
       if (ticket) {
         ticket.user.password = "";
+        ticket.comments.map(comment => (comment.user.password = ""));
         Event.findByPk(ticket.event.id, { include: [Ticket] })
           .then(event => {
             const result = {
               ticket,
               restTickets: event.tickets
             };
-            // console.log(event.tickets);
             res.json(result);
           })
           .catch(next);
