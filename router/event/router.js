@@ -39,7 +39,7 @@ router.post("/create", auth, (req, res, next) => {
 
 // FIND ALL EVENTS
 router.get("/allevents", (req, res, next) => {
-  const limit = 3;
+  const limit = 9;
   const offset = req.query.offset || 0;
 
   Event.findAndCountAll({
