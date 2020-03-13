@@ -9,6 +9,7 @@ const bcrypt = require("bcrypt");
 const auth = require("../../auth/middleware");
 const { toJWT, toData } = require("../../auth/jwt");
 
+// TRY TO LOGIN USER
 router.post("/login", (req, res, next) => {
   if (req.body) {
     if (req.body.username && req.body.password) {
@@ -20,7 +21,8 @@ router.post("/login", (req, res, next) => {
         .then(entity => {
           if (!entity) {
             res.status(400).send({
-              message: "User with that username does not exist"
+              message:
+                "User with that username does not exist. Please register first."
             });
           } else if (bcrypt.compareSync(req.body.password, entity.password)) {
             res.send({
@@ -30,14 +32,15 @@ router.post("/login", (req, res, next) => {
             });
           } else {
             res.status(400).send({
-              message: "Password was incorrect"
+              message:
+                "Password and Username does not match. Check your credentials, and try one more time."
             });
           }
         })
         .catch(err => {
           console.error(err);
           res.status(500).send({
-            message: "Something went wrong"
+            message: "Something went wrong. Try one more time later."
           });
         });
     } else {
@@ -112,6 +115,7 @@ router.get("/:id", (req, res, next) => {
     .catch(next);
 });
 
+// GET ALL USERS FROM DB
 router.get("/", (req, res, next) => {
   User.findAll()
     .then(users => {
