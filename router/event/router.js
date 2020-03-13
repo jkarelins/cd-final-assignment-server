@@ -147,10 +147,7 @@ router.post("/:id/ticket", auth, (req, res, next) => {
               }
             );
           })
-          .catch(err => {
-            console.log(err);
-            return next;
-          });
+          .catch(next);
       });
     } else {
       res.status(400).send({
