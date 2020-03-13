@@ -18,7 +18,11 @@ router.post("/create", auth, (req, res, next) => {
       req.body.logo &&
       req.body.eventDate
     ) {
-      Event.create({ ...req.body })
+      const { body } = req;
+      if (!req.body.eventEndDate) {
+        body.eventEndDate = body.eventDate;
+      }
+      Event.create({ ...body })
         .then(newEvent => res.json(newEvent))
         .catch(next);
     } else {

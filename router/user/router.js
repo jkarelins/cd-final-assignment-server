@@ -3,6 +3,7 @@ const router = new Router();
 
 const User = require("../../models/user/model");
 const Ticket = require("../../models/ticket/model");
+const Event = require("../../models/event/model");
 
 const bcrypt = require("bcrypt");
 const auth = require("../../auth/middleware");
@@ -51,6 +52,7 @@ router.post("/login", (req, res, next) => {
   }
 });
 
+// CREATE NEW USER
 router.post("/create", (req, res, next) => {
   if (req.body) {
     if (req.body.username && req.body.password) {
@@ -76,7 +78,8 @@ router.post("/create", (req, res, next) => {
             .catch(next);
         } else {
           res.status(400).send({
-            message: "User already exists"
+            message:
+              "Please choose another username. This username already exists."
           });
         }
       });
@@ -92,9 +95,10 @@ router.post("/create", (req, res, next) => {
   }
 });
 
+// GET ONE USER FROM DB
 router.get("/:id", (req, res, next) => {
   const { id } = req.params;
-  User.findByPk(id, { include: [Ticket] })
+  User.findByPk(id, { include: [{ model: Ticket, include: [Event] }] })
     .then(user => {
       if (user) {
         user.password = "";
@@ -121,12 +125,6 @@ router.get("/", (req, res, next) => {
       }
     })
     .catch(next);
-});
-
-router.get("/secret-endpoint", auth, (req, res) => {
-  res.send({
-    message: `Thanks for visiting the secret endpoint ${req.user.username}.`
-  });
 });
 
 module.exports = router;

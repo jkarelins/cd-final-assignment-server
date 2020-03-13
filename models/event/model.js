@@ -19,6 +19,9 @@ const Event = db.define(
     eventDate: {
       type: Sequelize.DATEONLY,
       allowNull: false
+    },
+    eventEndDate: {
+      type: Sequelize.DATEONLY
     }
   },
   {
